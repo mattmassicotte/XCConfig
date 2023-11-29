@@ -1,9 +1,13 @@
+<div align="center">
+
 [![Build Status][build status badge]][build status]
+
+</div>
 
 # XCConfig
 xcconfig file parsing and evaluation
 
-This is very WIP right now.
+This kinda works, but is quite limited.
 
 ## Integration
 
@@ -11,6 +15,18 @@ This is very WIP right now.
 dependencies: [
     .package(url: "https://github.com/mattmassicotte/XCConfig", branch: "main")
 ]
+```
+
+## Usage
+
+```swift
+import XCConfig
+
+let input = """
+HELLO = world
+"""
+
+let output = Parser().parse(input)
 ```
 
 ## Alternatives

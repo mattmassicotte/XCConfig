@@ -5,24 +5,51 @@ final class XCConfigTests: XCTestCase {
     func testEmptyFile() throws {
         let input = """
 """
+
+		let output = Parser().parse(input)
+		let expected: [Statement] = [
+		]
+
+		XCTAssertEqual(output, expected)
     }
 
     func testKeyValue() throws {
         let input = """
 HELLO = world
 """
+
+		let output = Parser().parse(input)
+		let expected: [Statement] = [
+			.assignment("HELLO", "world")
+		]
+
+		XCTAssertEqual(output, expected)
     }
+
+	func testComments() throws {
+		let input = """
+// blah
+HELLO = world
+"""
+
+		let output = Parser().parse(input)
+		let expected: [Statement] = [
+			.assignment("HELLO", "world")
+		]
+
+		XCTAssertEqual(output, expected)
+	}
 
     func testSimpleInclude() throws {
         let input = """
 #include "other.xcconfig"
 """
-    }
 
-    func testComments() throws {
-        let input = """
-// blah
-HELLO = world
-"""
+		let output = Parser().parse(input)
+		let expected: [Statement] = [
+			.includeDirective("other.xcconfig")
+		]
+
+		XCTAssertEqual(output, expected)
     }
 }
