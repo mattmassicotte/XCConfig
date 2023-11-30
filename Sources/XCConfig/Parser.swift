@@ -1,15 +1,10 @@
 /// Describes a variable conditional
 ///
 /// An example conditional is the stuff enclosed in brackets here "MY_VARIABLE[sdk=iphone*]"
-public struct Condition: Hashable, Sendable {
-	public enum Key: Hashable, Sendable {
-        case sdk
-        case config
-        case arch
-    }
-
-    let key: Key
-    let value: String
+public enum ConditionKey: Hashable, Sendable {
+	case sdk
+	case config
+	case arch
 }
 
 /// Values both on the left and right sides of an assignment statement
@@ -25,11 +20,30 @@ extension Value: ExpressibleByStringLiteral {
 	}
 }
 
+/// A variable value assignment
+public struct Assignment: Hashable, Sendable {
+	public let key: Value
+	public let value: Value
+	public let conditions: [ConditionKey: String]
+
+	public init(key: Value, value: Value, conditions: [ConditionKey: String] = [:]) {
+		self.key = key
+		self.value = value
+		self.conditions = conditions
+	}
+
+	public init(key: String, value: String, conditions: [ConditionKey: String] = [:]) {
+		self.key = .string(key)
+		self.value = .string(value)
+		self.conditions = conditions
+	}
+}
+
 /// Represents the statements in a xcconfig file
 public enum Statement: Hashable, Sendable {
     case includeDirective(String)
     case optionalIncludeDirective(String)
-    case assignment(Value, Value, conditions: [Condition] = [])
+	case assignment(Assignment)
 }
 
 public struct Parser {
@@ -76,8 +90,9 @@ public struct Parser {
 
 		let lhs = String(components[0]).trimmingCharacters(in: .whitespaces)
 		let rhs = String(components[1]).trimmingCharacters(in: .whitespaces)
+		let assignment = Assignment(key: lhs, value: rhs)
 
-		return Statement.assignment(.string(lhs), .string(rhs))
+		return Statement.assignment(assignment)
 	}
 
 	private func parseInclude(_ input: String) -> Statement? {

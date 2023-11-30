@@ -20,7 +20,7 @@ HELLO = world
 
 		let output = Parser().parse(input)
 		let expected: [Statement] = [
-			.assignment("HELLO", "world")
+			.assignment(Assignment(key: "HELLO", value: "world"))
 		]
 
 		XCTAssertEqual(output, expected)
@@ -34,7 +34,7 @@ HELLO = world
 
 		let output = Parser().parse(input)
 		let expected: [Statement] = [
-			.assignment("HELLO", "world")
+			.assignment(Assignment(key: "HELLO", value: "world"))
 		]
 
 		XCTAssertEqual(output, expected)
