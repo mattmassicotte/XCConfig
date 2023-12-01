@@ -14,6 +14,19 @@ public enum Value: Hashable, Sendable {
     case composition([Value])
 }
 
+extension Value: CustomStringConvertible {
+	public var description: String {
+		switch self {
+		case let .string(value):
+			value
+		case let .composition(values):
+			values.map({ $0.description }).joined(separator: " ")
+		case let .substitution(value, default: _):
+			"$(\(value.description))"
+		}
+	}
+}
+
 extension Value: ExpressibleByStringLiteral {
 	public init(stringLiteral value: String) {
 		self = .string(value)
@@ -36,6 +49,12 @@ public struct Assignment: Hashable, Sendable {
 		self.key = .string(key)
 		self.value = .string(value)
 		self.conditions = conditions
+	}
+}
+
+extension Assignment: CustomStringConvertible {
+	public var description: String {
+		"\(key) = \(value)"
 	}
 }
 
