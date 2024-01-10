@@ -28,8 +28,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install XCBeautify
-        run: brew install xcbeautify
       - name: Test platform ${{ matrix.destination }}
         run: set -o pipefail && xcodebuild -scheme XCConfig -destination "${{ matrix.destination }}" test | xcbeautify --renderer github-actions
 

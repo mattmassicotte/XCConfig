@@ -1,7 +1,9 @@
 import Foundation
 
-public enum BuildSettingValue {
+public enum BuildSettingValue: Hashable, Sendable {
 	case set(Set<String>, deprecated: Set<String> = Set())
+
+	public static let boolean = BuildSettingValue.set(["NO", "YES"])
 
 	public func evaluateValue(_ string: String) -> BuildSettingValueStatus {
 		switch self {
@@ -15,7 +17,7 @@ public enum BuildSettingValue {
 	}
 }
 
-public enum BuildSettingValueStatus {
+public enum BuildSettingValueStatus: Hashable, Sendable {
 	case valid
 	case invalid
 	case deprecated
@@ -24,14 +26,16 @@ public enum BuildSettingValueStatus {
 /// Xcode build settings.
 ///
 /// Defined by the reference at https://developer.apple.com/documentation/xcode/build-settings-reference
-public enum BuildSetting: String {
+public enum BuildSetting: String, Sendable {
 	case alwaysSearchUserPaths = "ALWAYS_SEARCH_USER_PATHS"
+	case enableHardenedRuntime = "ENABLE_HARDENED_RUNTIME"
 }
 
 extension BuildSetting {
 	public var permittedValue: BuildSettingValue {
 		switch self {
 		case .alwaysSearchUserPaths: .set(["NO"], deprecated: ["YES"])
+		case .enableHardenedRuntime: .boolean
 		}
 	}
 

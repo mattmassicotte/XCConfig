@@ -9,7 +9,13 @@ let package = Package(
     ],
     targets: [
         .target(name: "XCConfig"),
-        .testTarget(name: "XCConfigTests", dependencies: ["XCConfig"]),
+		.testTarget(
+			name: "XCConfigTests",
+			dependencies: ["XCConfig"],
+			resources: [
+				.copy("TestData"),
+			]
+		),
     ]
 )
 

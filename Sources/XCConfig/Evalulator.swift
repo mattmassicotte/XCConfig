@@ -10,15 +10,28 @@ public struct Evaluator {
 
 	/// Resolve a heirarchy of statements into a single array of assignments.
 	public func resolve(statements: [Statement]) throws -> [Assignment] {
-		statements.compactMap { statement -> Assignment? in
+		var assignments = [Assignment]()
+
+		for statement in statements {
 			switch statement {
-			case .includeDirective, .optionalIncludeDirective:
-				print("xcconfig includes unsupported")
-				return nil
+			case let .includeDirective(path), let .optionalIncludeDirective(path):
+				let includedAssignments = try evaluateInclude(path)
+
+				assignments.append(contentsOf: includedAssignments)
 			case let .assignment(assignment):
-				return assignment
+				assignments.append(assignment)
 			}
 		}
+
+		return assignments
+	}
+
+	private func evaluateInclude(_ path: String) throws -> [Assignment] {
+		let url = rootURL.appendingPathComponent(path)
+		let content = try String(contentsOf: url)
+		let statements = Parser().parse(content)
+
+		return try resolve(statements: statements)
 	}
 
 	/// Resolve a heirarchy of assignments into a single array.

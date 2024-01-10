@@ -1,7 +1,7 @@
 import XCTest
 @testable import XCConfig
 
-final class XCConfigTests: XCTestCase {
+final class ParserTests: XCTestCase {
     func testEmptyFile() throws {
         let input = """
 """
