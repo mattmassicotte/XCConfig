@@ -2,20 +2,17 @@ import Foundation
 
 /// Type that can evaluate and resolve build setting configuration assignments.
 public struct Evaluator {
-	public let rootURL: URL
-
-	public init(rootURL: URL) {
-		self.rootURL = rootURL
+	public init() {
 	}
 
 	/// Resolve a heirarchy of statements into a single array of assignments.
-	public func resolve(statements: [Statement]) throws -> [Assignment] {
+	public func resolve(statements: [Statement], for fileURL: URL) throws -> [Assignment] {
 		var assignments = [Assignment]()
 
 		for statement in statements {
 			switch statement {
 			case let .includeDirective(path), let .optionalIncludeDirective(path):
-				let includedAssignments = try evaluateInclude(path)
+				let includedAssignments = try evaluateInclude(path, for: fileURL)
 
 				assignments.append(contentsOf: includedAssignments)
 			case let .assignment(assignment):
@@ -26,12 +23,14 @@ public struct Evaluator {
 		return assignments
 	}
 
-	private func evaluateInclude(_ path: String) throws -> [Assignment] {
-		let url = rootURL.appendingPathComponent(path)
+	private func evaluateInclude(_ path: String, for fileURL: URL) throws -> [Assignment] {
+		let url = fileURL
+			.deletingLastPathComponent()
+			.appendingPathComponent(path)
 		let content = try String(contentsOf: url)
 		let statements = Parser().parse(content)
 
-		return try resolve(statements: statements)
+		return try resolve(statements: statements, for: url)
 	}
 
 	/// Resolve a heirarchy of assignments into a single array.
@@ -57,9 +56,9 @@ public struct Evaluator {
 	/// Reduce a heirarchy of statements into a single assignment array.
 	///
 	/// Ordered from lowest to highest precedence.
-	public func resolve(heirarchy: [[Statement]]) throws -> [Assignment] {
+	public func resolve(heirarchy: [[Statement]], for fileURL: URL) throws -> [Assignment] {
 		let assignmentsHeirarchy = try heirarchy.map { statements in
-			try resolve(statements: statements)
+			try resolve(statements: statements, for: fileURL)
 		}
 
 		return try resolve(heirarchy: assignmentsHeirarchy)
@@ -68,8 +67,8 @@ public struct Evaluator {
 	/// Evaluate a heirarchy of statements into a map of build settings and values.
 	///
 	/// Ordered from lowest to highest precedence.
-	public func evaluate(heirarchy: [[Statement]]) throws -> [BuildSetting: String] {
-		let assignments = try resolve(heirarchy: heirarchy)
+	public func evaluate(heirarchy: [[Statement]], for fileURL: URL) throws -> [BuildSetting: String] {
+		let assignments = try resolve(heirarchy: heirarchy, for: fileURL)
 
 		var settings = [BuildSetting: String]()
 
