@@ -1,18 +1,47 @@
 import Foundation
 
+
+public struct BuildSettingsHeirarchy {
+	public let platformDefaults: [Assignment]
+	public let projectConfigURL: URL?
+	public let project: [Assignment]
+	public let configURL: URL?
+	public let target: [Assignment]
+
+	public init(
+		platformDefaults: [Assignment],
+		projectConfigURL: URL?,
+		project: [Assignment],
+		configURL: URL?,
+		target: [Assignment]
+	) {
+		self.platformDefaults = platformDefaults
+		self.projectConfigURL = projectConfigURL
+		self.project = project
+		self.configURL = configURL
+		self.target = target
+	}
+}
+
 /// Type that can evaluate and resolve build setting configuration assignments.
+///
+/// Terminology:
+/// - "resolve": transform values into `Assignment`
+/// - "evaluate": transform `Assignment` into `[BuildSetting: String]`
 public struct Evaluator {
 	public init() {
 	}
 
-	/// Resolve a heirarchy of statements into a single array of assignments.
-	public func resolve(statements: [Statement], for fileURL: URL) throws -> [Assignment] {
+	/// Resolve the contents of an xcconfifg file into an array of `Assignment`.
+	public func resolve(contentsOf url: URL) throws -> [Assignment] {
 		var assignments = [Assignment]()
+
+		let statements = try Parser().parse(contentsOf: url)
 
 		for statement in statements {
 			switch statement {
 			case let .includeDirective(path), let .optionalIncludeDirective(path):
-				let includedAssignments = try evaluateInclude(path, for: fileURL)
+				let includedAssignments = try resolveInclude(path, for: url)
 
 				assignments.append(contentsOf: includedAssignments)
 			case let .assignment(assignment):
@@ -23,53 +52,7 @@ public struct Evaluator {
 		return assignments
 	}
 
-	private func evaluateInclude(_ path: String, for fileURL: URL) throws -> [Assignment] {
-		let url = fileURL
-			.deletingLastPathComponent()
-			.appendingPathComponent(path)
-		let content = try String(contentsOf: url)
-		let statements = Parser().parse(content)
-
-		return try resolve(statements: statements, for: url)
-	}
-
-	/// Resolve a heirarchy of assignments into a single array.
-	///
-	/// Ordered from lowest to highest precedence.
-	public func resolve(heirarchy: [[Assignment]]) throws -> [Assignment] {
-		var resolved = [String: Assignment]()
-
-		for assignments in heirarchy {
-			for assignment in assignments {
-				switch assignment.key {
-				case let .string(name):
-					resolved[name] = assignment
-				case .composition, .substitution:
-					print("unhandled complex base settings")
-				}
-			}
-		}
-
-		return Array(resolved.values)
-	}
-
-	/// Reduce a heirarchy of statements into a single assignment array.
-	///
-	/// Ordered from lowest to highest precedence.
-	public func resolve(heirarchy: [[Statement]], for fileURL: URL) throws -> [Assignment] {
-		let assignmentsHeirarchy = try heirarchy.map { statements in
-			try resolve(statements: statements, for: fileURL)
-		}
-
-		return try resolve(heirarchy: assignmentsHeirarchy)
-	}
-
-	/// Evaluate a heirarchy of statements into a map of build settings and values.
-	///
-	/// Ordered from lowest to highest precedence.
-	public func evaluate(heirarchy: [[Statement]], for fileURL: URL) throws -> [BuildSetting: String] {
-		let assignments = try resolve(heirarchy: heirarchy, for: fileURL)
-
+	public func evaluate(_ assignments: [Assignment]) throws -> [BuildSetting: String] {
 		var settings = [BuildSetting: String]()
 
 		for assignment in assignments {
@@ -83,5 +66,30 @@ public struct Evaluator {
 		}
 
 		return settings
+	}
+
+	private func resolveInclude(_ path: String, for fileURL: URL) throws -> [Assignment] {
+		let url = fileURL
+			.deletingLastPathComponent()
+			.appendingPathComponent(path)
+
+		return try resolve(contentsOf: url)
+	}
+
+	/// Evaluate a heirarchy of setting entries into a single array.
+	public func evaluate(_ heirarchy: BuildSettingsHeirarchy) throws -> [BuildSetting: String] {
+		var assignments = heirarchy.platformDefaults
+
+		let projectAssignments = try heirarchy.projectConfigURL.map { try resolve(contentsOf: $0) } ?? []
+
+		assignments.append(contentsOf: projectAssignments)
+		assignments.append(contentsOf: heirarchy.project)
+
+		let configAssignments = try heirarchy.configURL.map { try resolve(contentsOf: $0) } ?? []
+
+		assignments.append(contentsOf: configAssignments)
+		assignments.append(contentsOf: heirarchy.target)
+
+		return try evaluate(assignments)
 	}
 }

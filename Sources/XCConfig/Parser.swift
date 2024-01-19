@@ -1,3 +1,5 @@
+import Foundation
+
 /// Describes a variable conditional
 ///
 /// An example conditional is the stuff enclosed in brackets here "MY_VARIABLE[sdk=iphone*]"
@@ -98,6 +100,12 @@ public struct Parser {
 		}
 
 		return statements
+	}
+
+	public func parse(contentsOf url: URL) throws -> [Statement] {
+		let string = try String(contentsOf: url)
+
+		return parse(string)
 	}
 
 	private func parseAssigment(_ input: String) -> Statement? {
