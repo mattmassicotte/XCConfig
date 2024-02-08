@@ -52,4 +52,17 @@ HELLO = world
 
 		XCTAssertEqual(output, expected)
     }
+
+	func testOptionalInclude() throws {
+		let input = """
+#include? "other.xcconfig"
+"""
+
+		let output = Parser().parse(input)
+		let expected: [Statement] = [
+			.optionalIncludeDirective("other.xcconfig")
+		]
+
+		XCTAssertEqual(output, expected)
+	}
 }

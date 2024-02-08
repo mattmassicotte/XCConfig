@@ -1,0 +1,3 @@
+#include? "Missing.xcconfig"
+
+ENABLE_HARDENED_RUNTIME = YES

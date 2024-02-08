@@ -133,7 +133,10 @@ public struct Parser {
 		let end = input.index(before: input.endIndex)
 
 		let content = input[start..<end]
+		let string = String(content)
 
-		return .includeDirective(String(content))
+		let optional = input.hasPrefix("#include?")
+
+		return optional ? .optionalIncludeDirective(string) : .includeDirective(string)
 	}
 }

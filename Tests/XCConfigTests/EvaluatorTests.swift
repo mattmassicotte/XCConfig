@@ -124,4 +124,25 @@ extension EvaluatorTests {
 
 		XCTAssertEqual(values, expected)
 	}
+
+	func testTargetFileMissingOptionalInclude() throws {
+		let evaluator = Evaluator()
+		let root = Bundle.module.testDataURL.appendingPathComponent("MissingOptionalInclude")
+		let heirarchy = BuildSettingsHeirarchy(
+			projectRootURL: root,
+			platformDefaults: [],
+			projectConfigURL: nil,
+			project: [],
+			configURL: root.appendingPathComponent("Target.xcconfig"),
+			target: []
+		)
+
+		let values = try evaluator.evaluate(heirarchy)
+
+		let expected: [BuildSetting : String] = [
+			BuildSetting(rawValue: "ENABLE_HARDENED_RUNTIME")! : "YES"
+		]
+
+		XCTAssertEqual(values, expected)
+	}
 }
