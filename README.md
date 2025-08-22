@@ -32,7 +32,7 @@ let output = Parser().parse(input)
 
 ## Alternatives
 
-- (regexident/XCConfig)[https://github.com/regexident/XCConfig]
+- [regexident/XCConfig](https://github.com/regexident/XCConfig)
 
 ## Contributing and Collaboration
 
